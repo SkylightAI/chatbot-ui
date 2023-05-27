@@ -21,6 +21,12 @@ import {
 import { throttle } from '@/utils/data/throttle';
 
 import { ChatBody, Conversation, Message } from '@/types/chat';
+import {
+  OpenAIModel,
+  OpenAIModels,
+  WindowAIModelID,
+  WindowAIModels,
+} from '@/types/openai';
 import { Plugin } from '@/types/plugin';
 
 import HomeContext from '@/pages/api/home/home.context';
@@ -29,10 +35,10 @@ import Spinner from '../Spinner';
 import { ChatInput } from './ChatInput';
 import { ChatLoader } from './ChatLoader';
 import { ErrorMessageDiv } from './ErrorMessageDiv';
+import { MemoizedChatMessage } from './MemoizedChatMessage';
 import { ModelSelect } from './ModelSelect';
 import { SystemPrompt } from './SystemPrompt';
 import { TemperatureSlider } from './Temperature';
-import { MemoizedChatMessage } from './MemoizedChatMessage';
 
 interface Props {
   stopConversationRef: MutableRefObject<boolean>;
@@ -53,6 +59,8 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       modelError,
       loading,
       prompts,
+      windowaiEnabled,
+      windowai,
     },
     handleUpdateConversation,
     dispatch: homeDispatch,
@@ -63,7 +71,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showScrollDownButton, setShowScrollDownButton] =
     useState<boolean>(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -116,14 +123,59 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           });
         }
         const controller = new AbortController();
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const readerController = new ReadableStream({
+          async start(controller: any) {
+            let controllerClosed = false;
+            try {
+              await windowai.generateText(
+                {
+                  messages: [
+                    {role: "system", content: chatBody.prompt},
+                    ...chatBody.messages,]
+                },
+                {
+                  temperature: chatBody.temperature,
+                  maxTokens: 1000,
+                  onStreamResult: (res: any) => {
+                    if (controllerClosed) {
+                      return;
+                    }
+                    if(!res){
+                      return;
+                    }
+                    controller.enqueue(
+                      new TextEncoder().encode(res.message.content),
+                    );
+                  },
+                },
+              );
+              controller.close()
+            } catch (error) {
+              console.error('Error during text generation:', error);
+              homeDispatch({ field: 'loading', value: false });
+              homeDispatch({ field: 'messageIsStreaming', value: false });
+              toast.error('An error occurred during window.ai text generation.', {
+                id: 'error-during-text-generation',
+              });
+              return;
+            }
           },
-          signal: controller.signal,
-          body,
         });
+        let response;
+        if (windowaiEnabled) {
+          console.log('using window.ai');
+          response = new Response(readerController);
+        } else {
+          console.log('using openai');
+          response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
+            body,
+          });
+        }
         if (!response.ok) {
           homeDispatch({ field: 'loading', value: false });
           homeDispatch({ field: 'messageIsStreaming', value: false });
@@ -347,9 +399,93 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     };
   }, [messagesEndRef]);
 
+  enum EventType {
+    // Fired when the user's model is changed.
+    ModelChanged = 'model_changed',
+    // Fired for errors
+    Error = 'error',
+  }
+  const waitForAI = async (): Promise<boolean> => {
+    let timeoutCounter = 0;
+
+    while (!(window as any).ai) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      timeoutCounter += 100;
+
+      if (timeoutCounter >= 1000) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+  useEffect(() => {
+    if (!windowaiEnabled) {
+      console.log('windowai not enabled');
+      toast.dismiss('window-ai-detected');
+      toast.dismiss('window-ai-not-detected');
+      return;
+    }
+    const checkForAI = async () => {
+      if (!windowaiEnabled) {
+        return;
+      }
+      const aiDetected = await waitForAI();
+      if (aiDetected) {
+        homeDispatch({ field: 'windowai', value: (window as any).ai });
+        toast.success('window.ai detected', {
+          id: 'window-ai-detected',
+        });
+      } else {
+        // You can replace this with the toast.custom call or any other desired action
+        toast.custom(
+          <div className="bg-indigo-800 p-5 rounded-xl shadow-lg flex flex-col items-center space-y-4 transition-all duration-300 ease-in-out hover:shadow-xl">
+            <p className="text-lg font-semibold text-indigo-200">
+              Install the window.ai extension.
+            </p>
+            <a
+              href="https://windowai.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-indigo-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-400 transition-colors duration-300 ease-in-out"
+            >
+              Visit windowai.io
+            </a>
+          </div>,
+          {
+            id: 'window-ai-not-detected',
+            duration: 100000,
+          },
+        );
+      }
+    };
+
+    checkForAI();
+  }, [windowaiEnabled, homeDispatch]);
+
+  useEffect(() => {
+    const handleEvent = (event: EventType, data: unknown) => {
+      if (event === EventType.ModelChanged) {
+        let models = windowai
+          .getCurrentModel()
+          .then((modelID: WindowAIModelID) => {
+            console.log(modelID);
+            return [WindowAIModels[modelID ? modelID : 'customOrLocal']];
+          });
+        models.then((models: OpenAIModel[]) => {
+          homeDispatch({ field: 'models', value: models });
+        });
+      }
+    };
+    if (windowai) {
+      windowai.addEventListener(handleEvent);
+    }
+  }, [windowai]);
+
   return (
     <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
-      {!(apiKey || serverSideApiKeyIsSet) ? (
+      {/* TODO: better window.ai detection */}
+      {!(apiKey || serverSideApiKeyIsSet || (windowaiEnabled && windowai)) ? (
         <div className="mx-auto flex h-full w-[300px] flex-col justify-center space-y-6 sm:w-[600px]">
           <div className="text-center text-4xl font-bold text-black dark:text-white">
             Welcome to Chatbot UI
@@ -371,8 +507,18 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             </div>
             <div className="mb-2">
               {t(
-                'Please set your OpenAI API key in the bottom left of the sidebar.',
+                'Please set your OpenAI API key in the bottom left of the sidebar or use ',
               )}
+              {/*  windowai.io link */}
+              <a
+                href="https://windowai.io"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                window.ai
+              </a>
+              .
             </div>
             <div>
               {t("If you don't have an OpenAI API key, you can get one here: ")}
@@ -405,7 +551,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                         <Spinner size="16px" className="mx-auto" />
                       </div>
                     ) : (
-                      'Chatbot UI'
+                      `Chatbot UI${windowaiEnabled ? ' x window.ai' : ''}`
                     )}
                   </div>
 
