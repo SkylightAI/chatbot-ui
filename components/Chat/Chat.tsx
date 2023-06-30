@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import toast from 'react-hot-toast';
-import { ModelID } from 'window.ai';
+import { ModelID, getWindowAI } from 'window.ai';
 
 import { useTranslation } from 'next-i18next';
 
@@ -432,7 +432,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       }
       const aiDetected = await waitForAI();
       if (aiDetected) {
-        homeDispatch({ field: 'windowai', value: (window as any).ai });
+        await homeDispatch({ field: 'windowai', value: await getWindowAI() });
         toast.success('window.ai detected', {
           id: 'window-ai-detected',
         });
