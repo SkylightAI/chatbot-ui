@@ -42,6 +42,8 @@ export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
     tokenLimit: 32000,
   },
 };
+
+// TODO: Export text only models so we do not have to account for media models as well
 export const WindowAIModels: Record<any, OpenAIModel> = {
   [ModelID.GPT_3]: {
     id: ModelID.GPT_3,
