@@ -42,7 +42,7 @@ export const OpenAIModels: Record<OpenAIModelID, OpenAIModel> = {
     tokenLimit: 32000,
   },
 };
-export const WindowAIModels: Record<ModelID, OpenAIModel> = {
+export const WindowAIModels: Record<any, OpenAIModel> = {
   [ModelID.GPT_3]: {
     id: ModelID.GPT_3,
     name: 'GPT-3.5',
@@ -114,5 +114,5 @@ export const WindowAIModels: Record<ModelID, OpenAIModel> = {
     name: 'Palm Code Chat Bison',
     maxLength: 12000,
     tokenLimit: 4000,
-  },
+  }
 };
