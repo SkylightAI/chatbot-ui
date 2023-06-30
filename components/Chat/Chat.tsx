@@ -468,7 +468,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       if (event === EventType.ModelChanged) {
         let models = windowai
           .getCurrentModel()
-          .then((modelID: string) => {
+          .then((modelID: ModelID) => {
               if(Object.values(ModelID).includes(modelID)){
                 return [WindowAIModels[modelID]]
               }
@@ -483,11 +483,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                 ];
               }
             }
-          )
-          .catch((err: any) => {
-            console.log('error getting models', err);
-            return [{ id: 'externalOrLocal', name: 'External Model', maxLength: 100000, tokenLimit: 100000,}];
-          });
+          );
         models.then((models: any) => {
           homeDispatch({ field: 'models', value: models });
         });

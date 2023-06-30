@@ -1,5 +1,4 @@
-import { ModelID } from 'window.ai';
-
+import { ModelID } from "window.ai";
 export interface OpenAIModel {
   id: string;
   name: string;
@@ -50,6 +49,12 @@ export const WindowAIModels: Record<ModelID, OpenAIModel> = {
     maxLength: 12000,
     tokenLimit: 4000,
   },
+  [ModelID.GPT_3_16k]: {
+    id: ModelID.GPT_3_16k,
+    name: 'GPT-3.5 16k',
+    maxLength: 48000,
+    tokenLimit: 16000,
+  },
   [ModelID.GPT_4]: { 
     id: ModelID.GPT_4,
     name: 'GPT-4',
@@ -91,5 +96,23 @@ export const WindowAIModels: Record<ModelID, OpenAIModel> = {
     name: 'Cohere',
     maxLength: 12000,
     tokenLimit: 4000,
-  }
+  },
+  [ModelID.GPT_4_32k]: {
+    id: ModelID.GPT_4_32k,
+    name: 'GPT-4 32K',
+    maxLength: 96000,
+    tokenLimit: 32000,
+  },
+  [ModelID.Palm_Chat_Bison]: {
+    id: ModelID.Palm_Chat_Bison,
+    name: 'Palm Chat Bison',
+    maxLength: 12000,
+    tokenLimit: 4000,
+  },
+  [ModelID.Palm_Code_Chat_Bison]: {
+    id: ModelID.Palm_Code_Chat_Bison,
+    name: 'Palm Code Chat Bison',
+    maxLength: 12000,
+    tokenLimit: 4000,
+  },
 };

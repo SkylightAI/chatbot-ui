@@ -86,7 +86,7 @@ const Home = ({
         if(!windowai) return null;
         let models = windowai
           .getCurrentModel()
-          .then((modelID: string) => {
+          .then((modelID: ModelID) => {
               if(Object.values(ModelID).includes(modelID)){
                 return [WindowAIModels[modelID]]
               }
