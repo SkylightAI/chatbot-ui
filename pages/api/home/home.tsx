@@ -86,21 +86,25 @@ const Home = ({
         if(!windowai) return null;
         let models = windowai
           .getCurrentModel()
-          .then((modelID: ModelID) => {
-            console.log(modelID);
-            if(modelID){
-              return [WindowAIModels[modelID]]
+          .then((modelID: string) => {
+              if(Object.values(ModelID).includes(modelID)){
+                return [WindowAIModels[modelID]]
+              }
+              else{
+                return [
+                  {
+                    id: modelID ? modelID : 'externalOrLocal',
+                    name: modelID ? modelID : 'External Model',
+                    maxLength: 100000,
+                    tokenLimit: 100000,
+                  },
+                ];
+              }
             }
-            // external model
-            else{
-              return [
-                {
-                  id: "externalOrLocal",
-                  name: 'External Model',
-                  maxLength: 100000,
-                  tokenLimit: 100000,
-            },]
-          }
+          )
+          .catch((err: any) => {
+            console.log('error getting models', err);
+            return [{ id: 'externalOrLocal', name: 'External Model', maxLength: 100000, tokenLimit: 100000,}];
           });
         return models;
       }

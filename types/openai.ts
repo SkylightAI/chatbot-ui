@@ -1,4 +1,3 @@
-import { OPENAI_API_TYPE } from '../utils/app/const';
 import { ModelID } from 'window.ai';
 
 export interface OpenAIModel {
@@ -92,5 +91,5 @@ export const WindowAIModels: Record<ModelID, OpenAIModel> = {
     name: 'Cohere',
     maxLength: 12000,
     tokenLimit: 4000,
-  },
+  }
 };
