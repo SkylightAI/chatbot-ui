@@ -66,6 +66,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
+  useEffect(() => {
+    if (windowaiEnabled) {
+      console.log(windowai)
+    }
+  }, [windowai]);
+
   const [currentMessage, setCurrentMessage] = useState<Message>();
   const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -77,6 +83,11 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
 
   const handleSend = useCallback(
     async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
+      console.log(windowai)
+      if(windowaiEnabled && !windowai){
+        toast.loading("window.ai initalizing, or not installed", {duration: 1000});
+        return
+      }
       if (selectedConversation) {
         let updatedConversation: Conversation;
         if (deleteCount) {
@@ -162,8 +173,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           },
         });
         let response;
-        if (windowaiEnabled) {
-          console.log('using window.ai');
+        if (windowaiEnabled && windowai) {
           response = new Response(readerController);
         } else {
           console.log('using openai');
@@ -303,6 +313,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       pluginKeys,
       selectedConversation,
       stopConversationRef,
+      windowai
     ],
   );
 
@@ -632,6 +643,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       handleSend(
                         editedMessage,
                         selectedConversation?.messages.length - index,
+                        null
                       );
                     }}
                   />
