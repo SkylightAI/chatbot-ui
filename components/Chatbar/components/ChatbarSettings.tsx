@@ -26,7 +26,8 @@ export const ChatbarSettings = () => {
       serverSideApiKeyIsSet,
       serverSidePluginKeysSet,
       conversations,
-      windowaiEnabled
+      windowaiEnabled,
+      openrouterApiKey
     },
     dispatch: homeDispatch,
   } = useContext(HomeContext);
@@ -35,7 +36,7 @@ export const ChatbarSettings = () => {
     handleClearConversations,
     handleImportConversations,
     handleExportData,
-    handleApiKeyChange,
+    clearOpenrouterKey,
   } = useContext(ChatbarContext);
 
   const router = useRouter();
@@ -60,10 +61,12 @@ export const ChatbarSettings = () => {
         onClick={() => setIsSettingDialog(true)}
       />
       <SidebarButton
-        text={t('Login With Openrouter')}
+        text={!openrouterApiKey ? t('Login With Openrouter') : "Clear OpenRouter API Key"}
         icon={<IconArrowsSplit size={18} />}
         onClick={() => {
-          router.push(`https://openrouter.ai/auth?callback_url=${window.location.href}`);
+          !openrouterApiKey ?
+          router.push(`https://openrouter.ai/auth?callback_url=${window.location.origin + window.location.pathname}`) :
+          clearOpenrouterKey()
         }}
       />
       <SidebarButton

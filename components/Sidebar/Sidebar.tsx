@@ -38,7 +38,7 @@ const Sidebar = <T,>({
   toggleOpen,
   handleCreateItem,
   handleCreateFolder,
-  handleDrop,
+  handleDrop
 }: Props<T>) => {
   const { t } = useTranslation('promptbar');
 

@@ -540,14 +540,14 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                 rel="noreferrer"
                 className="text-slate-400 hover:underline"
               >
-                here
-              </a>: 
-              
+                here.
+              </a>
             </div>
             <div className="mb-2">
-              {t(
-                'Please click on Login with Openrouter or use ',
-              )}
+                {/* // 'Please click on bold Login with Openrouter or use ', */}
+                <div>
+                  Please click on <span className="font-bold">Login with Openrouter</span> in the bottom left or use
+                </div>
               {/*  windowai.io link */}
               <a
                 href="https://windowai.io"

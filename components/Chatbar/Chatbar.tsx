@@ -54,6 +54,15 @@ export const Chatbar = () => {
     },
     [homeDispatch],
   );
+
+  const clearOpenrouterKey = useCallback(
+    () => {
+      homeDispatch({ field: 'openrouterApiKey', value: '' });
+
+      localStorage.setItem('openrouterApiKey', '');
+    },
+    [homeDispatch],
+  );
   
   const handlePluginKeyChange = (pluginKey: PluginKey) => {
     if (pluginKeys.some((key) => key.pluginId === pluginKey.pluginId)) {
@@ -217,6 +226,7 @@ export const Chatbar = () => {
         handlePluginKeyChange,
         handleClearPluginKey,
         handleApiKeyChange,
+        clearOpenrouterKey
       }}
     >
       <Sidebar<Conversation>
