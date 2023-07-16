@@ -35,7 +35,7 @@ import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
 import { Navbar } from '@/components/Mobile/Navbar';
 import Promptbar from '@/components/Promptbar';
-
+import { useRouter } from 'next/router';
 import HomeContext from './home.context';
 import { HomeInitialState, initialState } from './home.state';
 
@@ -56,6 +56,31 @@ const Home = ({
   const { getModels } = useApiService();
   const { getModelsError } = useErrorService();
   const [initialRender, setInitialRender] = useState<boolean>(true);
+  const router = useRouter();
+  useEffect(() => {
+    const { code } = router.query;
+    console.log(code)
+    if(code){
+      fetch("https://openrouter.ai/api/v1/auth/keys", {
+        method: 'POST',
+        body: JSON.stringify({
+          code: code,
+        })
+      }).then((res) => {
+        console.log(res)
+        return res.json()
+      }
+      ).then((res) => {
+        if(res.key){
+          dispatch({ field: 'openrouterApiKey', value: res.key });
+          localStorage.setItem('openrouterApiKey', res.key);
+        }
+      }
+      ).catch((err) => {
+        console.error(err)
+      })
+  }
+}, [])
 
   const contextValue = useCreateReducer<HomeInitialState>({
     initialState,
@@ -72,6 +97,7 @@ const Home = ({
       temperature,
       windowaiEnabled,
       windowai,
+      openrouterApiKey
     },
     dispatch,
   } = contextValue;
@@ -79,9 +105,11 @@ const Home = ({
   const stopConversationRef = useRef<boolean>(false);
 
   const { data, error, refetch } = useQuery(
-    ['GetModels', apiKey, serverSideApiKeyIsSet, windowai, windowaiEnabled],
+    ['GetModels', apiKey, serverSideApiKeyIsSet, windowai, windowaiEnabled, openrouterApiKey],
     ({ signal }) => {
-      if (!apiKey && !serverSideApiKeyIsSet && !windowaiEnabled) return null;
+      console.log("OPENROUTER API KEY", openrouterApiKey)
+      if (!apiKey && !serverSideApiKeyIsSet && !windowaiEnabled && !openrouterApiKey) return null;
+
       if(windowaiEnabled) {
         if(!windowai) return null;
         let models = windowai
@@ -108,6 +136,54 @@ const Home = ({
           });
         return models;
       }
+      else if(openrouterApiKey){
+        return fetch("https://openrouter.ai/api/v1/models", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }).then((res) => {
+          console.log(res)
+          return res.json()
+        }
+        ).then((res) => {
+          if(res.data){
+            let models = res.data.map((model: any) => {
+              return {
+                id: model.id,
+                // name: Object.values(ModelID).includes(model.id) ? WindowAIModels[model.id].name : model.id,
+                name: model.id,
+                maxLength: model.context_length,
+                tokenLimit: 100000,
+              }
+            })
+            console.log(models)
+            return models;
+          }
+          else{
+            return [
+              {
+                id: 'externalOrLocal',
+                name: 'External Model',
+                maxLength: 100000,
+                tokenLimit: 100000,
+              },
+            ];
+          }
+        }
+        ).catch((err) => {
+          console.error(err)
+          return [
+            {
+              id: 'externalOrLocal',
+              name: 'External Model',
+              maxLength: 100000,
+              tokenLimit: 100000,
+            },
+          ];
+        }
+        )
+      }
       else{
         return getModels(
           {
@@ -116,6 +192,7 @@ const Home = ({
           signal,
         );
       }
+
     },
     { enabled: true, refetchOnMount: false },
   );
@@ -295,6 +372,8 @@ const Home = ({
       });
     }
     const apiKey = localStorage.getItem('apiKey');
+    const openrouterApiKey = localStorage.getItem('openrouterApiKey');
+    dispatch({ field: 'openrouterApiKey', value: openrouterApiKey });
 
     if (serverSideApiKeyIsSet) {
       dispatch({ field: 'apiKey', value: '' });

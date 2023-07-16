@@ -29,6 +29,7 @@ export const OpenAIStream = async (
   temperature : number,
   key: string,
   messages: Message[],
+  headers: Headers
 ) => {
   let url = `${OPENAI_API_HOST}/v1/chat/completions`;
   if (OPENAI_API_TYPE === 'azure') {
@@ -46,6 +47,8 @@ export const OpenAIStream = async (
       ...((OPENAI_API_TYPE === 'openai' && OPENAI_ORGANIZATION) && {
         'OpenAI-Organization': OPENAI_ORGANIZATION,
       }),
+      "HTTP-Referer": headers.get("http-referer"),
+      "X-Title": headers.get("x-title")
     },
     method: 'POST',
     body: JSON.stringify({

@@ -54,7 +54,7 @@ export const Chatbar = () => {
     },
     [homeDispatch],
   );
-
+  
   const handlePluginKeyChange = (pluginKey: PluginKey) => {
     if (pluginKeys.some((key) => key.pluginId === pluginKey.pluginId)) {
       const updatedPluginKeys = pluginKeys.map((key) => {

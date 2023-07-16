@@ -1,5 +1,6 @@
-import { IconFileExport, IconSettings, IconBrandWindows } from '@tabler/icons-react';
+import { IconFileExport, IconSettings, IconBrandWindows, IconArrowsSplit} from '@tabler/icons-react';
 import { useContext, useState } from 'react';
+import { useRouter } from 'next/router';
 
 import { useTranslation } from 'next-i18next';
 
@@ -37,6 +38,8 @@ export const ChatbarSettings = () => {
     handleApiKeyChange,
   } = useContext(ChatbarContext);
 
+  const router = useRouter();
+
   return (
     <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
       {conversations.length > 0 ? (
@@ -57,6 +60,13 @@ export const ChatbarSettings = () => {
         onClick={() => setIsSettingDialog(true)}
       />
       <SidebarButton
+        text={t('Login With Openrouter')}
+        icon={<IconArrowsSplit size={18} />}
+        onClick={() => {
+          router.push('https://openrouter.ai/auth?callback_url=http://localhost:3000');
+        }}
+      />
+      <SidebarButton
         text={(windowaiEnabled ? 'Disable' : 'Enable') + ' Window AI'}
         icon={<IconBrandWindows size={18} />}
         onClick={() => {
@@ -67,13 +77,13 @@ export const ChatbarSettings = () => {
           localStorage.setItem('windowaiEnabled', (!windowaiEnabled).toString());
         }}
       />
-      {!windowaiEnabled ? (
+      {/* {!windowaiEnabled ? (
         !serverSideApiKeyIsSet ? (
           <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
         ) : null
-      ) : null}
+      ) : null} */}
 
-      {!serverSidePluginKeysSet ? <PluginKeys /> : null}
+      {/* {!serverSidePluginKeysSet ? <PluginKeys /> : null} */}
 
       <SettingDialog
         open={isSettingDialogOpen}
