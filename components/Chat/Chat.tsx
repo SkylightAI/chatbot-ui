@@ -67,11 +67,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
-  useEffect(() => {
-    if (windowaiEnabled) {
-      console.log(windowai)
-    }
-  }, [windowai]);
 
   const [currentMessage, setCurrentMessage] = useState<Message>();
   const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
@@ -84,7 +79,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
 
   const handleSend = useCallback(
     async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
-      console.log(windowai)
       if(windowaiEnabled && !windowai){
         toast.loading("window.ai initalizing, or not installed", {duration: 1000});
         return
@@ -584,7 +578,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       `Chatbot UI${windowaiEnabled ? ' x window.ai' : ''}`
                     )}
                   </div>
-
                   {models.length > 0 && (
                     <div className="flex h-full flex-col space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-600">
                       <ModelSelect />

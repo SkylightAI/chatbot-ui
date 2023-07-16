@@ -44,7 +44,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface Props {
   serverSideApiKeyIsSet: boolean;
   serverSidePluginKeysSet: boolean;
-  defaultModelId: OpenAIModelID;
+  defaultModelId: ModelID;
 }
 
 const Home = ({
@@ -59,7 +59,6 @@ const Home = ({
   const router = useRouter();
   useEffect(() => {
     const { code } = router.query;
-    console.log(code)
     if(code){
       fetch("https://openrouter.ai/api/v1/auth/keys", {
         method: 'POST',
@@ -67,7 +66,6 @@ const Home = ({
           code: code,
         })
       }).then((res) => {
-        console.log(res)
         return res.json()
       }
       ).then((res) => {
@@ -107,7 +105,6 @@ const Home = ({
   const { data, error, refetch } = useQuery(
     ['GetModels', apiKey, serverSideApiKeyIsSet, windowai, windowaiEnabled, openrouterApiKey],
     ({ signal }) => {
-      console.log("OPENROUTER API KEY", openrouterApiKey)
       if (!apiKey && !serverSideApiKeyIsSet && !windowaiEnabled && !openrouterApiKey) return null;
 
       if(windowaiEnabled) {
@@ -143,7 +140,6 @@ const Home = ({
             'Content-Type': 'application/json',
           }
         }).then((res) => {
-          console.log(res)
           return res.json()
         }
         ).then((res) => {
@@ -157,7 +153,6 @@ const Home = ({
                 tokenLimit: 100000,
               }
             })
-            console.log(models)
             return models;
           }
           else{
@@ -292,10 +287,10 @@ const Home = ({
       name: t('New Conversation'),
       messages: [],
       model: lastConversation?.model || {
-        id: OpenAIModels[defaultModelId].id,
-        name: OpenAIModels[defaultModelId].name,
-        maxLength: OpenAIModels[defaultModelId].maxLength,
-        tokenLimit: OpenAIModels[defaultModelId].tokenLimit,
+        id: WindowAIModels[defaultModelId].id,
+        name: WindowAIModels[defaultModelId].name,
+        maxLength: WindowAIModels[defaultModelId].maxLength,
+        tokenLimit: WindowAIModels[defaultModelId].tokenLimit,
       },
       prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
@@ -447,7 +442,7 @@ const Home = ({
           id: uuidv4(),
           name: t('New Conversation'),
           messages: [],
-          model: OpenAIModels[defaultModelId],
+          model: WindowAIModels[defaultModelId],
           prompt: DEFAULT_SYSTEM_PROMPT,
           temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
           folderId: null,
@@ -510,13 +505,8 @@ const Home = ({
 export default Home;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
-  const defaultModelId =
-    (process.env.DEFAULT_MODEL &&
-      Object.values(OpenAIModelID).includes(
-        process.env.DEFAULT_MODEL as OpenAIModelID,
-      ) &&
-      process.env.DEFAULT_MODEL) ||
-    fallbackModelID;
+  // deleted a bunch of env vars here
+  const defaultModelId = "openai/gpt-3.5-turbo";
 
   let serverSidePluginKeysSet = false;
 

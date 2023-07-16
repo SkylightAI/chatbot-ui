@@ -23,6 +23,21 @@ export const ModelSelect = () => {
       });
   };
 
+  useEffect(() => {
+    console.log('selected model', selectedConversation?.model?.id)
+    }, [selectedConversation?.model?.id]);
+
+  useEffect(() => {
+    console.log(models)
+    if (models.length == 1) {
+      handleChange({
+        target: {
+          value: models[0].id,
+        },
+      } as any);
+    }
+  }, [models]);
+
   return (
     <div className="flex flex-col">
       <label className="mb-2 text-left text-neutral-700 dark:text-neutral-400">
