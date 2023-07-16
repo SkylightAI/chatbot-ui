@@ -63,7 +63,7 @@ export const ChatbarSettings = () => {
         text={t('Login With Openrouter')}
         icon={<IconArrowsSplit size={18} />}
         onClick={() => {
-          router.push('https://openrouter.ai/auth?callback_url=http://localhost:3000');
+          router.push(`https://openrouter.ai/auth?callback_url=${window.location.href}`);
         }}
       />
       <SidebarButton

@@ -534,11 +534,19 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             </div>
             <div className="mb-2">
               It is <span className="italic">only</span> used to communicate
-              with their API.
+              with their API. The code is opensource as well - available  <a
+                href="https://github.com/SkylightAI/chatbot-ui"
+                target="_blank"
+                rel="noreferrer"
+                className="text-slate-400 hover:underline"
+              >
+                here
+              </a>: 
+              
             </div>
             <div className="mb-2">
               {t(
-                'Please set your OpenAI API key in the bottom left of the sidebar or use ',
+                'Please click on Login with Openrouter or use ',
               )}
               {/*  windowai.io link */}
               <a
@@ -552,15 +560,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
               .
             </div>
             <div>
-              {t("If you don't have an OpenAI API key, you can get one here: ")}
-              <a
-                href="https://platform.openai.com/account/api-keys"
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                openai.com
-              </a>
             </div>
           </div>
         </div>
