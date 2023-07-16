@@ -35,7 +35,7 @@ import { Chat } from '@/components/Chat/Chat';
 import { Chatbar } from '@/components/Chatbar/Chatbar';
 import { Navbar } from '@/components/Mobile/Navbar';
 import Promptbar from '@/components/Promptbar';
-
+import { useRouter } from 'next/router';
 import HomeContext from './home.context';
 import { HomeInitialState, initialState } from './home.state';
 
@@ -44,7 +44,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface Props {
   serverSideApiKeyIsSet: boolean;
   serverSidePluginKeysSet: boolean;
-  defaultModelId: OpenAIModelID;
+  defaultModelId: ModelID;
 }
 
 const Home = ({
@@ -56,6 +56,29 @@ const Home = ({
   const { getModels } = useApiService();
   const { getModelsError } = useErrorService();
   const [initialRender, setInitialRender] = useState<boolean>(true);
+  const router = useRouter();
+  useEffect(() => {
+    const { code } = router.query;
+    if(code){
+      fetch("https://openrouter.ai/api/v1/auth/keys", {
+        method: 'POST',
+        body: JSON.stringify({
+          code: code,
+        })
+      }).then((res) => {
+        return res.json()
+      }
+      ).then((res) => {
+        if(res.key){
+          dispatch({ field: 'openrouterApiKey', value: res.key });
+          localStorage.setItem('openrouterApiKey', res.key);
+        }
+      }
+      ).catch((err) => {
+        console.error(err)
+      })
+  }
+}, [])
 
   const contextValue = useCreateReducer<HomeInitialState>({
     initialState,
@@ -72,6 +95,7 @@ const Home = ({
       temperature,
       windowaiEnabled,
       windowai,
+      openrouterApiKey
     },
     dispatch,
   } = contextValue;
@@ -79,9 +103,10 @@ const Home = ({
   const stopConversationRef = useRef<boolean>(false);
 
   const { data, error, refetch } = useQuery(
-    ['GetModels', apiKey, serverSideApiKeyIsSet, windowai, windowaiEnabled],
+    ['GetModels', apiKey, serverSideApiKeyIsSet, windowai, windowaiEnabled, openrouterApiKey],
     ({ signal }) => {
-      if (!apiKey && !serverSideApiKeyIsSet && !windowaiEnabled) return null;
+      if (!apiKey && !serverSideApiKeyIsSet && !windowaiEnabled && !openrouterApiKey) return null;
+
       if(windowaiEnabled) {
         if(!windowai) return null;
         let models = windowai
@@ -108,6 +133,52 @@ const Home = ({
           });
         return models;
       }
+      else if(openrouterApiKey){
+        return fetch("https://openrouter.ai/api/v1/models", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }).then((res) => {
+          return res.json()
+        }
+        ).then((res) => {
+          if(res.data){
+            let models = res.data.map((model: any) => {
+              return {
+                id: model.id,
+                // name: Object.values(ModelID).includes(model.id) ? WindowAIModels[model.id].name : model.id,
+                name: model.id,
+                maxLength: model.context_length,
+                tokenLimit: 100000,
+              }
+            })
+            return models;
+          }
+          else{
+            return [
+              {
+                id: 'externalOrLocal',
+                name: 'External Model',
+                maxLength: 100000,
+                tokenLimit: 100000,
+              },
+            ];
+          }
+        }
+        ).catch((err) => {
+          console.error(err)
+          return [
+            {
+              id: 'externalOrLocal',
+              name: 'External Model',
+              maxLength: 100000,
+              tokenLimit: 100000,
+            },
+          ];
+        }
+        )
+      }
       else{
         return getModels(
           {
@@ -116,6 +187,7 @@ const Home = ({
           signal,
         );
       }
+
     },
     { enabled: true, refetchOnMount: false },
   );
@@ -215,10 +287,10 @@ const Home = ({
       name: t('New Conversation'),
       messages: [],
       model: lastConversation?.model || {
-        id: OpenAIModels[defaultModelId].id,
-        name: OpenAIModels[defaultModelId].name,
-        maxLength: OpenAIModels[defaultModelId].maxLength,
-        tokenLimit: OpenAIModels[defaultModelId].tokenLimit,
+        id: WindowAIModels[defaultModelId].id,
+        name: WindowAIModels[defaultModelId].name,
+        maxLength: WindowAIModels[defaultModelId].maxLength,
+        tokenLimit: WindowAIModels[defaultModelId].tokenLimit,
       },
       prompt: DEFAULT_SYSTEM_PROMPT,
       temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
@@ -295,6 +367,8 @@ const Home = ({
       });
     }
     const apiKey = localStorage.getItem('apiKey');
+    const openrouterApiKey = localStorage.getItem('openrouterApiKey');
+    dispatch({ field: 'openrouterApiKey', value: openrouterApiKey });
 
     if (serverSideApiKeyIsSet) {
       dispatch({ field: 'apiKey', value: '' });
@@ -368,7 +442,7 @@ const Home = ({
           id: uuidv4(),
           name: t('New Conversation'),
           messages: [],
-          model: OpenAIModels[defaultModelId],
+          model: WindowAIModels[defaultModelId],
           prompt: DEFAULT_SYSTEM_PROMPT,
           temperature: lastConversation?.temperature ?? DEFAULT_TEMPERATURE,
           folderId: null,
@@ -431,13 +505,8 @@ const Home = ({
 export default Home;
 
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
-  const defaultModelId =
-    (process.env.DEFAULT_MODEL &&
-      Object.values(OpenAIModelID).includes(
-        process.env.DEFAULT_MODEL as OpenAIModelID,
-      ) &&
-      process.env.DEFAULT_MODEL) ||
-    fallbackModelID;
+  // deleted a bunch of env vars here
+  const defaultModelId = "openai/gpt-3.5-turbo";
 
   let serverSidePluginKeysSet = false;
 

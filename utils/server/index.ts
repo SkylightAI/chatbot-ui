@@ -37,6 +37,8 @@ export const OpenAIStream = async (
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://chatbot-ui-window-ai-git-windowai-skylight-ai.vercel.app/',
+      'X-Title': 'Chatbot UI',
       ...(OPENAI_API_TYPE === 'openai' && {
         Authorization: `Bearer ${key ? key : process.env.OPENAI_API_KEY}`
       }),

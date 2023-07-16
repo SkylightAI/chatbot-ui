@@ -61,16 +61,12 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       prompts,
       windowaiEnabled,
       windowai,
+      openrouterApiKey
     },
     handleUpdateConversation,
     dispatch: homeDispatch,
   } = useContext(HomeContext);
 
-  useEffect(() => {
-    if (windowaiEnabled) {
-      console.log(windowai)
-    }
-  }, [windowai]);
 
   const [currentMessage, setCurrentMessage] = useState<Message>();
   const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true);
@@ -83,7 +79,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
 
   const handleSend = useCallback(
     async (message: Message, deleteCount = 0, plugin: Plugin | null = null) => {
-      console.log(windowai)
       if(windowaiEnabled && !windowai){
         toast.loading("window.ai initalizing, or not installed", {duration: 1000});
         return
@@ -114,7 +109,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
         const chatBody: ChatBody = {
           model: updatedConversation.model,
           messages: updatedConversation.messages,
-          key: apiKey,
+          key: openrouterApiKey,
           prompt: updatedConversation.prompt,
           temperature: updatedConversation.temperature,
         };
@@ -134,57 +129,62 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
           });
         }
         const controller = new AbortController();
-        const readerController = new ReadableStream({
-          async start(controller: any) {
-            let controllerClosed = false;
-            try {
-              await windowai.generateText(
-                {
-                  messages: [
-                    {role: "system", content: chatBody.prompt},
-                    ...chatBody.messages,]
-                },
-                {
-                  temperature: chatBody.temperature,
-                  maxTokens: 1000,
-                  onStreamResult: (res: any) => {
-                    if (controllerClosed) {
-                      return;
-                    }
-                    if(!res){
-                      return;
-                    }
-                    controller.enqueue(
-                      new TextEncoder().encode(res.message.content),
-                    );
-                  },
-                },
-              );
-              controller.close()
-            } catch (error) {
-              console.error('Error during text generation:', error);
-              homeDispatch({ field: 'loading', value: false });
-              homeDispatch({ field: 'messageIsStreaming', value: false });
-              toast.error('An error occurred during window.ai text generation.', {
-                id: 'error-during-text-generation',
-              });
-              return;
-            }
-          },
-        });
         let response;
         if (windowaiEnabled && windowai) {
-          response = new Response(readerController);
-        } else {
-          console.log('using openai');
+          const windowReader = new ReadableStream({
+            async start(controller: any) {
+              let controllerClosed = false;
+              try {
+                await windowai.generateText(
+                  {
+                    messages: [
+                      {role: "system", content: chatBody.prompt},
+                      ...chatBody.messages,]
+                  },
+                  {
+                    temperature: chatBody.temperature,
+                    maxTokens: 1000,
+                    onStreamResult: (res: any) => {
+                      if (controllerClosed) {
+                        return;
+                      }
+                      if(!res){
+                        return;
+                      }
+                      controller.enqueue(
+                        new TextEncoder().encode(res.message.content),
+                      );
+                    },
+                  },
+                );
+                controller.close()
+              } catch (error) {
+                console.error('Error during text generation:', error);
+                homeDispatch({ field: 'loading', value: false });
+                homeDispatch({ field: 'messageIsStreaming', value: false });
+                toast.error('An error occurred during window.ai text generation.', {
+                  id: 'error-during-text-generation',
+                });
+                return;
+              }
+            },
+          });
+          response = new Response(windowReader);
+        } else if(openrouterApiKey){
+          console.log('using openrouter');
           response = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              // hardcoded into the request
+              // 'HTTP-Referer': 'https://chatbot-ui-window-ai-git-windowai-skylight-ai.vercel.app/',
+              // 'X-Title': 'Chatbot UI'
             },
             signal: controller.signal,
             body,
           });
+        } else {
+          throw new Error('Must use OpenRouter or Window AI');
         }
         if (!response.ok) {
           homeDispatch({ field: 'loading', value: false });
@@ -313,7 +313,9 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       pluginKeys,
       selectedConversation,
       stopConversationRef,
-      windowai
+      windowai,
+      openrouterApiKey,
+      windowaiEnabled
     ],
   );
 
@@ -504,55 +506,54 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       windowai.addEventListener(handleEvent);
     }
   }, [windowai]);
-
   return (
     <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
       {/* TODO: better window.ai detection */}
-      {!(apiKey || serverSideApiKeyIsSet || (windowaiEnabled && windowai)) ? (
+      {!(apiKey || serverSideApiKeyIsSet || (windowaiEnabled && windowai) || (openrouterApiKey))  ? (
         <div className="mx-auto flex h-full w-[300px] flex-col justify-center space-y-6 sm:w-[600px]">
           <div className="text-center text-4xl font-bold text-black dark:text-white">
             Welcome to Chatbot UI
           </div>
           <div className="text-center text-lg text-black dark:text-white">
-            <div className="mb-8">{`Chatbot UI is an open source clone of OpenAI's ChatGPT UI.`}</div>
-            <div className="mb-2 font-bold">
-              Important: Chatbot UI is 100% unaffiliated with OpenAI.
-            </div>
+            <div className="mb-0">{`Chatbot UI is an open source clone of OpenAI's ChatGPT UI.`}</div>
           </div>
           <div className="text-center text-gray-500 dark:text-gray-400">
-            <div className="mb-2">
-              Chatbot UI allows you to plug in your API key to use this UI with
-              their API.
-            </div>
-            <div className="mb-2">
-              It is <span className="italic">only</span> used to communicate
-              with their API.
-            </div>
-            <div className="mb-2">
-              {t(
-                'Please set your OpenAI API key in the bottom left of the sidebar or use ',
-              )}
-              {/*  windowai.io link */}
-              <a
+            <div className="mb-2 text-md">
+              Chatbot UI allows you to connect to <a
+                href="https://openrouter.ai"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                {" "} OpenRouter
+              </a> or  <a
                 href="https://windowai.io"
                 target="_blank"
                 rel="noreferrer"
                 className="text-blue-500 hover:underline"
               >
-                window.ai
-              </a>
-              .
-            </div>
-            <div>
-              {t("If you don't have an OpenAI API key, you can get one here: ")}
-              <a
-                href="https://platform.openai.com/account/api-keys"
+                {" "} window.ai
+              </a> and chat with multiple models. Please click on <span className="font-bold">Login with Openrouter</span> in the bottom left or
+              use <a
+                href="https://windowai.io"
                 target="_blank"
                 rel="noreferrer"
                 className="text-blue-500 hover:underline"
               >
-                openai.com
+                {" "} window.ai
+              </a>.
+            </div>
+            <div className="mb-2">
+              Your keys are only used to communicate with the OpenRouter API. The code is opensource - available  <a
+                href="https://github.com/SkylightAI/chatbot-ui"
+                target="_blank"
+                rel="noreferrer"
+                className="text-slate-400 hover:underline"
+              >
+                here.
               </a>
+            </div>
+            <div>
             </div>
           </div>
         </div>
@@ -577,7 +578,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                       `Chatbot UI${windowaiEnabled ? ' x window.ai' : ''}`
                     )}
                   </div>
-
                   {models.length > 0 && (
                     <div className="flex h-full flex-col space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-600">
                       <ModelSelect />

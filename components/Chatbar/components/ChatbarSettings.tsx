@@ -1,5 +1,6 @@
-import { IconFileExport, IconSettings, IconBrandWindows } from '@tabler/icons-react';
+import { IconFileExport, IconSettings, IconBrandWindows, IconArrowsSplit} from '@tabler/icons-react';
 import { useContext, useState } from 'react';
+import { useRouter } from 'next/router';
 
 import { useTranslation } from 'next-i18next';
 
@@ -25,7 +26,8 @@ export const ChatbarSettings = () => {
       serverSideApiKeyIsSet,
       serverSidePluginKeysSet,
       conversations,
-      windowaiEnabled
+      windowaiEnabled,
+      openrouterApiKey
     },
     dispatch: homeDispatch,
   } = useContext(HomeContext);
@@ -34,8 +36,10 @@ export const ChatbarSettings = () => {
     handleClearConversations,
     handleImportConversations,
     handleExportData,
-    handleApiKeyChange,
+    clearOpenrouterKey,
   } = useContext(ChatbarContext);
+
+  const router = useRouter();
 
   return (
     <div className="flex flex-col items-center space-y-1 border-t border-white/20 pt-1 text-sm">
@@ -57,6 +61,15 @@ export const ChatbarSettings = () => {
         onClick={() => setIsSettingDialog(true)}
       />
       <SidebarButton
+        text={!openrouterApiKey ? t('Login With Openrouter') : "Clear OpenRouter API Key"}
+        icon={<IconArrowsSplit size={18} />}
+        onClick={() => {
+          !openrouterApiKey ?
+          router.push(`https://openrouter.ai/auth?callback_url=${window.location.origin + window.location.pathname}`) :
+          clearOpenrouterKey()
+        }}
+      />
+      <SidebarButton
         text={(windowaiEnabled ? 'Disable' : 'Enable') + ' Window AI'}
         icon={<IconBrandWindows size={18} />}
         onClick={() => {
@@ -67,13 +80,13 @@ export const ChatbarSettings = () => {
           localStorage.setItem('windowaiEnabled', (!windowaiEnabled).toString());
         }}
       />
-      {!windowaiEnabled ? (
+      {/* {!windowaiEnabled ? (
         !serverSideApiKeyIsSet ? (
           <Key apiKey={apiKey} onApiKeyChange={handleApiKeyChange} />
         ) : null
-      ) : null}
+      ) : null} */}
 
-      {!serverSidePluginKeysSet ? <PluginKeys /> : null}
+      {/* {!serverSidePluginKeysSet ? <PluginKeys /> : null} */}
 
       <SettingDialog
         open={isSettingDialogOpen}

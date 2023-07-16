@@ -3,8 +3,6 @@ import { useContext, useEffect } from 'react';
 
 import { useTranslation } from 'next-i18next';
 
-import { OpenAIModel, WindowAIModels} from '@/types/openai';
-
 import HomeContext from '@/pages/api/home/home.context';
 
 export const ModelSelect = () => {
@@ -15,24 +13,28 @@ export const ModelSelect = () => {
     handleUpdateConversation,
     dispatch: homeDispatch,
   } = useContext(HomeContext);
-  console.log(models)
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     selectedConversation &&
       handleUpdateConversation(selectedConversation, {
         key: 'model',
         value: models.find(
           (model) => model.id === e.target.value,
-        ) as OpenAIModel,
+        ) as any,
       });
   };
 
   useEffect(() => {
-    if (models.length === 1) {
+    console.log('selected model', selectedConversation?.model?.id)
+    }, [selectedConversation?.model?.id]);
+
+  useEffect(() => {
+    console.log(models)
+    if (models.length == 1) {
       handleChange({
         target: {
           value: models[0].id,
-          },
-          } as React.ChangeEvent<HTMLSelectElement>,)
+        },
+      } as any);
     }
   }, [models]);
 
@@ -54,21 +56,19 @@ export const ModelSelect = () => {
               value={model.id}
               className="dark:bg-[#343541] dark:text-white"
             >
-              {model.id === defaultModelId
-                ? `Default (${model.name})`
-                : model.name}
+              {model.name}
             </option>
           ))}
         </select>
       </div>
       <div className="w-full mt-3 text-left text-neutral-700 dark:text-neutral-400 flex items-center">
         <a
-          href="https://platform.openai.com/account/usage"
+          href="https://openrouter.ai/activity"
           target="_blank"
           className="flex items-center"
         >
           <IconExternalLink size={18} className={'inline mr-1'} />
-          {t('View Account Usage')}
+          {t('View OpenRouter Activity')}
         </a>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { Prompt } from '@/types/prompt';
 
 export interface HomeInitialState {
   apiKey: string;
+  openrouterApiKey: string;
   pluginKeys: PluginKey[];
   loading: boolean;
   windowaiEnabled: boolean;
@@ -33,6 +34,7 @@ export interface HomeInitialState {
 
 export const initialState: HomeInitialState = {
   apiKey: '',
+  openrouterApiKey: '',
   loading: false,
   windowaiEnabled: false,
   windowai: null,
