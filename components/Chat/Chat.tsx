@@ -182,23 +182,15 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://chatbot-ui-window-ai-git-windowai-skylight-ai.vercel.app/',
-              'X-Title': 'Chatbot UI'
+              // hardcoded into the request
+              // 'HTTP-Referer': 'https://chatbot-ui-window-ai-git-windowai-skylight-ai.vercel.app/',
+              // 'X-Title': 'Chatbot UI'
             },
             signal: controller.signal,
             body,
           });
         } else {
-          // console.log('using openai');
-          // response = await fetch(endpoint, {
-          //   method: 'POST',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          //   signal: controller.signal,
-          //   body,
-          // });
-          throw new Error('No API key set');
+          throw new Error('Must use OpenRouter or Window AI');
         }
         if (!response.ok) {
           homeDispatch({ field: 'loading', value: false });

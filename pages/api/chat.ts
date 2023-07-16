@@ -17,7 +17,6 @@ export const config = {
 const handler = async (req: Request): Promise<Response> => {
   try {
     const { model, messages, key, prompt, temperature } = (await req.json()) as ChatBody;
-    const headers = req.headers;
     await init((imports) => WebAssembly.instantiate(wasm, imports));
     const encoding = new Tiktoken(
       tiktokenModel.bpe_ranks,
@@ -51,7 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
       messagesToSend = [message, ...messagesToSend];
     }
     encoding.free();
-    const stream = await OpenAIStream(model, promptToSend, temperatureToUse, key, messagesToSend, headers);
+    const stream = await OpenAIStream(model, promptToSend, temperatureToUse, key, messagesToSend);
 
     return new Response(stream);
   } catch (error) {

@@ -29,7 +29,6 @@ export const OpenAIStream = async (
   temperature : number,
   key: string,
   messages: Message[],
-  headers: Headers
 ) => {
   let url = `${OPENAI_API_HOST}/v1/chat/completions`;
   if (OPENAI_API_TYPE === 'azure') {
@@ -38,6 +37,8 @@ export const OpenAIStream = async (
   const res = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://chatbot-ui-window-ai-git-windowai-skylight-ai.vercel.app/',
+      'X-Title': 'Chatbot UI',
       ...(OPENAI_API_TYPE === 'openai' && {
         Authorization: `Bearer ${key ? key : process.env.OPENAI_API_KEY}`
       }),
@@ -47,8 +48,6 @@ export const OpenAIStream = async (
       ...((OPENAI_API_TYPE === 'openai' && OPENAI_ORGANIZATION) && {
         'OpenAI-Organization': OPENAI_ORGANIZATION,
       }),
-      "HTTP-Referer": headers.get("http-referer"),
-      "X-Title": headers.get("x-title")
     },
     method: 'POST',
     body: JSON.stringify({
