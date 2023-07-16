@@ -521,19 +521,36 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
             Welcome to Chatbot UI
           </div>
           <div className="text-center text-lg text-black dark:text-white">
-            <div className="mb-8">{`Chatbot UI is an open source clone of OpenAI's ChatGPT UI.`}</div>
-            <div className="mb-2 font-bold">
-              Important: Chatbot UI is 100% unaffiliated with OpenAI.
-            </div>
+            <div className="mb-0">{`Chatbot UI is an open source clone of OpenAI's ChatGPT UI.`}</div>
           </div>
           <div className="text-center text-gray-500 dark:text-gray-400">
-            <div className="mb-2">
-              Chatbot UI allows you to plug in your API key to use this UI with
-              their API.
+            <div className="mb-2 text-md">
+              Chatbot UI allows you to connect to <a
+                href="https://openrouter.ai"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                {" "} OpenRouter
+              </a> or  <a
+                href="https://windowai.io"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                {" "} window.ai
+              </a> and chat with multiple models. Please click on <span className="font-bold">Login with Openrouter</span> in the bottom left or
+              use <a
+                href="https://windowai.io"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-500 hover:underline"
+              >
+                {" "} window.ai
+              </a>.
             </div>
             <div className="mb-2">
-              It is <span className="italic">only</span> used to communicate
-              with their API. The code is opensource as well - available  <a
+              Your keys are only used to communicate with the OpenRouter API. The code is opensource - available  <a
                 href="https://github.com/SkylightAI/chatbot-ui"
                 target="_blank"
                 rel="noreferrer"
@@ -541,22 +558,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
               >
                 here.
               </a>
-            </div>
-            <div className="mb-2">
-                {/* // 'Please click on bold Login with Openrouter or use ', */}
-                <div>
-                  Please click on <span className="font-bold">Login with Openrouter</span> in the bottom left or use
-                </div>
-              {/*  windowai.io link */}
-              <a
-                href="https://windowai.io"
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                window.ai
-              </a>
-              .
             </div>
             <div>
             </div>
