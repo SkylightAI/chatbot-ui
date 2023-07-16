@@ -61,7 +61,7 @@ export const ChatbarSettings = () => {
         onClick={() => setIsSettingDialog(true)}
       />
       <SidebarButton
-        text={!openrouterApiKey ? t('Login With Openrouter') : "Clear OpenRouter API Key"}
+        text={!openrouterApiKey ? t('Login With OpenRouter') : "Clear OpenRouter API Key"}
         icon={<IconArrowsSplit size={18} />}
         onClick={() => {
           !openrouterApiKey ?
