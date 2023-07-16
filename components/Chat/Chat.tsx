@@ -533,7 +533,7 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
                 className="text-blue-500 hover:underline"
               >
                 {" "} window.ai
-              </a> and chat with multiple models. Please click on <span className="font-bold">Login with Openrouter</span> in the bottom left or
+              </a> and chat with multiple models. Please click on <span className="font-bold">Login with OpenRouter</span> in the bottom left or
               use <a
                 href="https://windowai.io"
                 target="_blank"
