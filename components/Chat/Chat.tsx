@@ -512,7 +512,6 @@ export const Chat = memo(({ stopConversationRef }: Props) => {
       windowai.addEventListener(handleEvent);
     }
   }, [windowai]);
-  // console.log("OPENROUTER KEY - LOCALLY STORED", openrouterApiKey)
   return (
     <div className="relative flex-1 overflow-hidden bg-white dark:bg-[#343541]">
       {/* TODO: better window.ai detection */}
