@@ -3,8 +3,6 @@ import { useContext, useEffect } from 'react';
 
 import { useTranslation } from 'next-i18next';
 
-import { OpenAIModel, WindowAIModels} from '@/types/openai';
-
 import HomeContext from '@/pages/api/home/home.context';
 
 export const ModelSelect = () => {
@@ -15,26 +13,15 @@ export const ModelSelect = () => {
     handleUpdateConversation,
     dispatch: homeDispatch,
   } = useContext(HomeContext);
-  console.log(models)
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     selectedConversation &&
       handleUpdateConversation(selectedConversation, {
         key: 'model',
         value: models.find(
           (model) => model.id === e.target.value,
-        ) as OpenAIModel,
+        ) as any,
       });
   };
-
-  useEffect(() => {
-    if (models.length === 1) {
-      handleChange({
-        target: {
-          value: models[0].id,
-          },
-          } as React.ChangeEvent<HTMLSelectElement>,)
-    }
-  }, [models]);
 
   return (
     <div className="flex flex-col">
@@ -54,9 +41,7 @@ export const ModelSelect = () => {
               value={model.id}
               className="dark:bg-[#343541] dark:text-white"
             >
-              {model.id === defaultModelId
-                ? `Default (${model.name})`
-                : model.name}
+              {model.name}
             </option>
           ))}
         </select>
